@@ -189,6 +189,8 @@ key_def_set_part(struct key_def *def, uint32_t part_no, uint32_t fieldno,
 	def->parts[part_no].coll = coll;
 	def->parts[part_no].coll_id = coll_id;
 	def->parts[part_no].sort_order = sort_order;
+	def->parts[part_no].offset_slot_cache = TUPLE_OFFSET_SLOT_NIL;
+	def->parts[part_no].format_cache = NULL;
 	if (path != NULL) {
 		def->parts[part_no].path_len = path_len;
 		assert(def->parts[part_no].path != NULL);
@@ -722,10 +724,13 @@ key_def_merge(const struct key_def *first, const struct key_def *second)
 			new_def->parts[pos].path = data;
 			data += part->path_len + 1;
 		}
-		key_def_set_part(new_def, pos++, part->fieldno, part->type,
+		key_def_set_part(new_def, pos, part->fieldno, part->type,
 				 part->nullable_action, part->coll,
 				 part->coll_id, part->sort_order, part->path,
 				 part->path_len);
+		new_def->parts[pos].offset_slot_cache = part->offset_slot_cache;
+		new_def->parts[pos].format_cache = part->format_cache;
+		pos++;
 	}
 
 	/* Set-append second key def's part to the new key def. */
@@ -738,10 +743,13 @@ key_def_merge(const struct key_def *first, const struct key_def *second)
 			new_def->parts[pos].path = data;
 			data += part->path_len + 1;
 		}
-		key_def_set_part(new_def, pos++, part->fieldno, part->type,
+		key_def_set_part(new_def, pos, part->fieldno, part->type,
 				 part->nullable_action, part->coll,
 				 part->coll_id, part->sort_order, part->path,
 				 part->path_len);
+		new_def->parts[pos].offset_slot_cache = part->offset_slot_cache;
+		new_def->parts[pos].format_cache = part->format_cache;
+		pos++;
 	}
 	key_def_set_cmp(new_def);
 	return new_def;
